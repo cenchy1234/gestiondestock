@@ -1,0 +1,9 @@
+{% extends "core/base.html" %}
+{% block title %}Accueil{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="display-4">Bienvenue {{ request.user.username }} 🎉</h1>
+    <p class="lead">Vous êtes connecté en tant que <strong>{{ request.user.role }}</strong>.</p>
+</div>
+{% endblock %}

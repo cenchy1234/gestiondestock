@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Mouvements{% endblock %}
+
+{% block content %}
+<h2>Liste des Mouvements</h2>
+<a href="{% url 'mouvement_create' %}" class="btn btn-success mb-3">Ajouter un mouvement</a>
+
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr>
+      <th>Date</th>
+      <th>Type</th>
+      <th>Article</th>
+      <th>Quantité</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for mouvement in mouvements %}
+    <tr>
+      <td>{{ mouvement.date_mouvement }}</td>
+      <td>{{ mouvement.mouvement_type }}</td>
+      <td>{{ mouvement.article.nom }}</td>
+      <td>{{ mouvement.quantite }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">Aucun mouvement trouvé.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

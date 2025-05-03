@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un Article</title>
+</head>
+<body>
+    <h1>Ajouter un Article</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Sauvegarder</button>
+        <a href="{% url 'article_list' %}">Annuler</a>
+    </form>
+</body>
+</html>
