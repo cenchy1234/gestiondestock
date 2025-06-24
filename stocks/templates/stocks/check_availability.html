@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Disponibilité</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fa;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .message {
+            font-size: 20px;
+            margin-top: 30px;
+            color: #2c3e50;
+        }
+
+        .available {
+            color: green;
+        }
+
+        .not-available {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vérification de la disponibilité</h1>
+    {% if stock_disponible > 0 %}
+        <p class="message available">
+            L'article <strong>{{ item.article.nom }}</strong> est disponible avec un stock de {{ stock_disponible }} unités.
+        </p>
+    {% else %}
+        <p class="message not-available">
+            L'article <strong>{{ item.article.nom }}</strong> est indisponible. Stock actuel : {{ stock_disponible }} unités.
+        </p>
+    {% endif %}
+</body>
+</html>

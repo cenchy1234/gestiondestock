@@ -1,30 +1,190 @@
 {% extends 'base.html' %}
+
 {% block title %}Mouvements{% endblock %}
 
 {% block content %}
-<h2>Liste des Mouvements</h2>
-<a href="{% url 'mouvement_create' %}" class="btn btn-success mb-3">Ajouter un mouvement</a>
+<div class="container-fluid">
+    <!-- Header avec animation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient text-white animate-fadeInUp" style="background: var(--gradient-success);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Mouvements de Stock
+                        </h2>
+                        <p class="mb-0 opacity-75">Suivez les entrées et sorties de vos produits</p>
+                    </div>
+                    {% if user.can_manage_stock %}
+                    <a href="{% url 'stocks:mouvement_create' %}" class="btn btn-light btn-lg animate-bounce">
+                        <i class="fas fa-plus me-2"></i>Nouveau Mouvement
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-<table class="table table-bordered">
-  <thead class="table-light">
-    <tr>
-      <th>Date</th>
-      <th>Type</th>
-      <th>Article</th>
-      <th>Quantité</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for mouvement in mouvements %}
-    <tr>
-      <td>{{ mouvement.date_mouvement }}</td>
-      <td>{{ mouvement.mouvement_type }}</td>
-      <td>{{ mouvement.article.nom }}</td>
-      <td>{{ mouvement.quantite }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="4">Aucun mouvement trouvé.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <!-- Critical Stock Alerts -->
+    {% if critical_stock %}
+    <div class="alert alert-danger">
+        <h4><i class="fas fa-exclamation-triangle me-2"></i>Attention ! Stock critique détecté :</h4>
+        <ul class="mb-0">
+            {% for stock in critical_stock %}
+            <li>
+                <strong>{{ stock.article__nom }}</strong> - Stock disponible : {{ stock.stock_disponible }} unités
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Filters modernes -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+                <select name="type" class="form-select form-select-sm">
+                    <option value="">Tous les types</option>
+                    <option value="ENTREE" {% if request.GET.type == 'ENTREE' %}selected{% endif %}>
+                        Entrées
+                    </option>
+                    <option value="SORTIE" {% if request.GET.type == 'SORTIE' %}selected{% endif %}>
+                        Sorties
+                    </option>
+                </select>
+                <button class="btn btn-primary btn-sm" type="submit">
+                    <i class="fas fa-filter me-1"></i>Filtrer
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+                <input type="date" name="date" class="form-control form-control-sm"
+                       value="{{ request.GET.date }}" placeholder="Date">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">
+                    <i class="fas fa-calendar me-1"></i>Date
+                </button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-chart-line me-1"></i>Stats
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table to display movements -->
+    <div class="compact-card">
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th><i class="fas fa-box me-1"></i>Article</th>
+                    <th><i class="fas fa-sort-numeric-up me-1"></i>Quantité</th>
+                    <th><i class="fas fa-arrows-alt-v me-1"></i>Type</th>
+                    <th><i class="fas fa-calendar me-1"></i>Date</th>
+                    <th><i class="fas fa-warehouse me-1"></i>Stock Disponible</th>
+                    <th><i class="fas fa-comment me-1"></i>Remarque</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mouvement in mouvements %}
+                <tr>
+                    <td>
+                        <strong>{{ mouvement.article.nom }}</strong><br>
+                        <small class="text-muted">{{ mouvement.article.reference }}</small>
+                    </td>
+                    <td>
+                        <span class="badge {% if mouvement.mouvement_type == 'ENTREE' %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                            {% if mouvement.mouvement_type == 'ENTREE' %}+{% else %}-{% endif %}{{ mouvement.quantite|floatformat:0 }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if mouvement.mouvement_type == 'ENTREE' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                            {{ mouvement.get_mouvement_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <small>{{ mouvement.date_mouvement|date:"d/m/Y" }}</small><br>
+                        <small class="text-muted">{{ mouvement.date_mouvement|time:"H:i" }}</small>
+                    </td>
+                    <td>
+                        {% with stock=mouvement.article.stock_disponible %}
+                        <span class="badge {% if stock <= mouvement.article.seuil_alerte %}bg-danger{% elif stock <= mouvement.article.seuil_alerte|add:10 %}bg-warning text-dark{% else %}bg-success{% endif %} fs-6">
+                            {{ stock|floatformat:0 }} unités
+                        </span>
+                        {% if stock <= mouvement.article.seuil_alerte %}
+                        <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Stock critique</small>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>
+                        {% if mouvement.remarque %}
+                        <small>{{ mouvement.remarque|truncatechars:50 }}</small>
+                        {% else %}
+                        <small class="text-muted">-</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Aucun mouvement de stock enregistré.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<!-- Custom animations and table styling -->
+<style>
+    .table th, .table td {
+        text-align: center;
+    }
+
+    .btn-lg {
+        font-size: 18px;
+    }
+
+    .btn-info {
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-info:hover {
+        background-color: #17a2b8;
+        transform: scale(1.05);
+    }
+
+    .animated {
+        animation-duration: 1s;
+        animation-timing-function: ease-out;
+    }
+
+    .fadeInUp {
+        animation-name: fadeInUp;
+    }
+
+    @keyframes fadeInUp {
+        0% {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 {% endblock %}

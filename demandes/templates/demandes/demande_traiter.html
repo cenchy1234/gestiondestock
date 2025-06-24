@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Traiter Demande {{ demande.numero_demande }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-primary mb-1">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Traiter Demande {{ demande.numero_demande }}
+                        </h2>
+                        <p class="text-muted mb-0">Approuver ou rejeter la demande</p>
+                    </div>
+                    <a href="{% url 'demandes:demande_detail' demande.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Informations de la demande -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations de la demande
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>Demandeur:</strong> {{ demande.demandeur.get_full_name|default:demande.demandeur.username }}<br>
+                                <strong>Rôle:</strong> {{ demande.demandeur.get_role_display }}<br>
+                                <strong>Date de demande:</strong> {{ demande.date_demande|date:"d/m/Y à H:i" }}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong>Article demandé:</strong><br>
+                            {{ demande.article.nom }}<br>
+                            <small class="text-muted">{{ demande.article.reference }}</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong>Quantité demandée:</strong><br>
+                            <span class="badge bg-primary fs-6">{{ demande.quantite_demandee }} unités</span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong>Stock disponible:</strong><br>
+                            <span class="badge bg-success fs-6">{{ demande.article.stock_disponible }} unités</span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong>Priorité:</strong><br>
+                            {% if demande.priorite == 'URGENTE' %}
+                                <span class="badge bg-danger">Urgente</span>
+                            {% elif demande.priorite == 'HAUTE' %}
+                                <span class="badge bg-warning">Haute</span>
+                            {% elif demande.priorite == 'NORMALE' %}
+                                <span class="badge bg-primary">Normale</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Basse</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12">
+                            <strong>Motif de la demande:</strong><br>
+                            <p class="mt-2 p-3 bg-light rounded">{{ demande.motif }}</p>
+                        </div>
+                        
+                        {% if demande.remarques %}
+                        <div class="col-12">
+                            <strong>Remarques:</strong><br>
+                            <p class="mt-2 p-3 bg-light rounded">{{ demande.remarques }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de traitement -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Décision de traitement
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Vérification du stock -->
+                    {% if demande.quantite_demandee > demande.article.stock_disponible %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Attention !</strong> La quantité demandée ({{ demande.quantite_demandee }}) 
+                        dépasse le stock disponible ({{ demande.article.stock_disponible }}).
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Stock suffisant</strong> pour satisfaire cette demande.
+                    </div>
+                    {% endif %}
+
+                    {% if form %}
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.quantite_accordee.id_for_label }}" class="form-label">
+                                <i class="fas fa-sort-numeric-up me-1"></i>{{ form.quantite_accordee.label }}
+                            </label>
+                            {{ form.quantite_accordee }}
+                            {% if form.quantite_accordee.help_text %}
+                                <div class="form-text">{{ form.quantite_accordee.help_text }}</div>
+                            {% endif %}
+                            {% if form.quantite_accordee.errors %}
+                                <div class="text-danger small">{{ form.quantite_accordee.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.commentaire_traitement.id_for_label }}" class="form-label">
+                                <i class="fas fa-comment me-1"></i>{{ form.commentaire_traitement.label }}
+                            </label>
+                            {{ form.commentaire_traitement }}
+                            {% if form.commentaire_traitement.errors %}
+                                <div class="text-danger small">{{ form.commentaire_traitement.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <button type="submit" name="action" value="approuver" class="btn btn-success w-100">
+                                    <i class="fas fa-check me-2"></i>Approuver la demande
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" name="action" value="rejeter" class="btn btn-danger w-100">
+                                    <i class="fas fa-times me-2"></i>Rejeter la demande
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <a href="{% url 'demandes:demande_detail' demande.pk %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-arrow-left me-2"></i>Annuler et retourner
+                            </a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <!-- Formulaire simple en cas d'erreur -->
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="quantite_accordee" class="form-label">
+                                <i class="fas fa-sort-numeric-up me-1"></i>Quantité accordée
+                            </label>
+                            <input type="number" name="quantite_accordee" id="quantite_accordee"
+                                   class="form-control" min="1" max="{{ demande.article.stock_disponible }}"
+                                   value="{{ demande.quantite_demandee }}">
+                            <div class="form-text">
+                                Stock disponible: {{ demande.article.stock_disponible }} unités.
+                                Quantité demandée: {{ demande.quantite_demandee }} unités.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="commentaire_traitement" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Commentaire
+                            </label>
+                            <textarea name="commentaire_traitement" id="commentaire_traitement"
+                                      class="form-control" rows="3"
+                                      placeholder="Commentaire sur le traitement de la demande..."></textarea>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <button type="submit" name="action" value="approuver" class="btn btn-success w-100">
+                                    <i class="fas fa-check me-2"></i>Approuver la demande
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" name="action" value="rejeter" class="btn btn-danger w-100">
+                                    <i class="fas fa-times me-2"></i>Rejeter la demande
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <a href="{% url 'demandes:demande_detail' demande.pk %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-arrow-left me-2"></i>Annuler et retourner
+                            </a>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Aide
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <strong>Approuver :</strong> La demande sera marquée comme approuvée et pourra être livrée.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-times text-danger me-2"></i>
+                            <strong>Rejeter :</strong> La demande sera refusée définitivement.
+                        </li>
+                        <li>
+                            <i class="fas fa-edit text-info me-2"></i>
+                            <strong>Quantité accordée :</strong> Vous pouvez accorder une quantité différente de celle demandée.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantiteInput = document.getElementById('id_quantite_accordee');
+    const stockDisponible = {{ demande.article.stock_disponible }};
+    const quantiteDemandee = {{ demande.quantite_demandee }};
+    
+    if (quantiteInput) {
+        // Pré-remplir avec la quantité demandée ou le stock disponible (le plus petit)
+        const quantiteInitiale = Math.min(quantiteDemandee, stockDisponible);
+        quantiteInput.value = quantiteInitiale;
+        
+        // Validation en temps réel
+        quantiteInput.addEventListener('input', function() {
+            const quantite = parseInt(this.value) || 0;
+            const approuverBtn = document.querySelector('button[value="approuver"]');
+            
+            if (quantite > stockDisponible) {
+                this.classList.add('is-invalid');
+                approuverBtn.disabled = true;
+                approuverBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Stock insuffisant';
+            } else if (quantite <= 0) {
+                this.classList.add('is-invalid');
+                approuverBtn.disabled = true;
+                approuverBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Quantité invalide';
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                approuverBtn.disabled = false;
+                approuverBtn.innerHTML = '<i class="fas fa-check me-2"></i>Approuver la demande';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

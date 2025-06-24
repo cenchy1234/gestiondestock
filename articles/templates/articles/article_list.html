@@ -2,10 +2,59 @@
 {% block title %}Articles{% endblock %}
 
 {% block content %}
-<h2>Liste des Articles</h2>
-<a href="{% url 'article_create' %}" class="btn btn-success mb-3">Ajouter un article</a>
+<div class="container-fluid">
+    <!-- Header avec animation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient text-white animate-fadeInUp" style="background: var(--gradient-primary);">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1">
+                            <i class="fas fa-box me-2"></i>
+                            Gestion des Articles
+                        </h2>
+                        <p class="mb-0 opacity-75">Gérez votre catalogue de produits</p>
+                    </div>
+                    {% if user.can_manage_stock %}
+                    <a href="{% url 'articles:article_create' %}" class="btn btn-light btn-lg animate-bounce">
+                        <i class="fas fa-plus me-2"></i>Nouvel Article
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
-<table class="table table-striped">
+    <!-- Search Form moderne -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <form method="get">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0"
+                           placeholder="Rechercher par nom ou référence..." value="{{ query }}">
+                    <button class="btn btn-primary" type="submit">
+                        Rechercher
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i>Imprimer
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+<div class="compact-card">
+<table class="table table-striped mb-0">
   <thead>
     <tr>
       <th>Nom</th>
@@ -13,25 +62,59 @@
       <th>Catégorie</th>
       <th>Prix</th>
       <th>Quantité</th>
+      <th>Stock Disponible</th>
       <th>Actions</th>
     </tr>
   </thead>
   <tbody>
     {% for article in articles %}
-    <tr>
-      <td>{{ article.nom }}</td>
-      <td>{{ article.reference }}</td>
-      <td>{{ article.categorie }}</td>
-      <td>{{ article.prix }}</td>
-      <td>{{ article.quantite_initiale }}</td>
+    <tr {% if article.is_stock_critique %}class="table-danger"{% endif %}>
       <td>
-        <a href="{% url 'article_update' article.pk %}" class="btn btn-sm btn-warning">Modifier</a>
-        <a href="{% url 'article_delete' article.pk %}" class="btn btn-sm btn-danger">Supprimer</a>
+        <strong>{{ article.nom }}</strong>
+        {% if article.description %}
+        <br><small class="text-muted">{{ article.description|truncatechars:50 }}</small>
+        {% endif %}
+      </td>
+      <td><code>{{ article.reference }}</code></td>
+      <td>
+        <span class="badge bg-secondary">{{ article.get_categorie_display }}</span>
+      </td>
+      <td>
+        <strong>{{ article.prix|floatformat:2 }} DH</strong>
+      </td>
+      <td>
+        <span class="badge bg-info">{{ article.quantite_initiale|floatformat:0 }}</span>
+      </td>
+      <td>
+        {% with stock=article.stock_disponible %}
+        <span class="badge {% if stock <= article.seuil_alerte %}bg-danger{% elif stock <= article.seuil_alerte|add:10 %}bg-warning text-dark{% else %}bg-success{% endif %} fs-6">
+          {{ stock|floatformat:0 }} unités
+        </span>
+        {% if stock <= article.seuil_alerte %}
+        <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Stock critique</small>
+        {% endif %}
+        {% endwith %}
+      </td>
+      <td>
+        {% if user.can_manage_stock %}
+        <div class="btn-group" role="group">
+          <a href="{% url 'articles:article_update' article.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+            <i class="fas fa-edit"></i>
+          </a>
+          <a href="{% url 'articles:article_delete' article.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
+            <i class="fas fa-trash"></i>
+          </a>
+        </div>
+        {% else %}
+        <span class="text-muted">Consultation seule</span>
+        {% endif %}
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="6">Aucun article trouvé.</td></tr>
+    <tr><td colspan="7">Aucun article trouvé.</td></tr>
     {% endfor %}
   </tbody>
 </table>
+</div>
+
 {% endblock %}

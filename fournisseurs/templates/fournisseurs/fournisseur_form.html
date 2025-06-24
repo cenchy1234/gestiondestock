@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Formulaire Fournisseur{% endblock %}
+
+{% block content %}
+<h1>{{ form.instance.pk|yesno:"Modifier un Fournisseur,Ajouter un Fournisseur" }}</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Enregistrer</button>
+    <a href="{% url 'fournisseurs:fournisseur_list' %}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}

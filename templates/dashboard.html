@@ -1,79 +1,582 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Tableau de Bord - Gestion de Stock{% endblock %}
 
 {% block content %}
-<head>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<head/>
-<div class="container py-5">
-    <h1 class="mb-4">Tableau de Bord 📊</h1>
-
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Articles</div>
+<div class="container-fluid">
+    <!-- Header avec informations utilisateur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white">
                 <div class="card-body">
-                    <h5 class="card-title">{{ total_articles }}</h5>
-                    <p class="card-text">Total articles enregistrés</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-header">Stock Total</div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_stock }}</h5>
-                    <p class="card-text">Quantité disponible</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header">Entrées</div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_entrees }}</h5>
-                    <p class="card-text">Mouvements d'entrée</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-header">Sorties</div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ total_sorties }}</h5>
-                    <p class="card-text">Mouvements de sortie</p>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="mb-2">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Tableau de Bord
+                            </h1>
+                            <p class="mb-0 opacity-75">
+                                Bienvenue {{ user.first_name|default:user.username }} - {{ user.get_role_display }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="mb-2">
+                                <i class="fas fa-clock me-1"></i>
+                                <span id="current-time">--:--:--</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-calendar me-1"></i>
+                                <span id="current-date">--/--/----</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <canvas id="movementChart" width="600" height="300"></canvas>
+    <!-- Statistiques principales -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="p-3 rounded-circle bg-primary bg-opacity-10">
+                                <i class="fas fa-box fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0 text-primary fw-bold">{{ total_articles }}</h3>
+                            <p class="text-muted mb-0">Total Articles</p>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-primary" style="width: 85%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'articles:article_list' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>Voir tous
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="p-3 rounded-circle bg-success bg-opacity-10">
+                                <i class="fas fa-warehouse fa-2x text-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0 text-success fw-bold">{{ stock_disponible }}</h3>
+                            <p class="text-muted mb-0">Unités en Stock</p>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-success" style="width: 70%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'stocks:mouvement_list' %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-exchange-alt me-1"></i>Mouvements
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="p-3 rounded-circle bg-warning bg-opacity-10">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0 text-warning fw-bold">{{ articles_rupture|length }}</h3>
+                            <p class="text-muted mb-0">Stock Critique</p>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-warning" style="width: {{ articles_rupture|length|add:0 }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-warning btn-sm" onclick="toggleAlerts()">
+                            <i class="fas fa-eye me-1"></i>Voir alertes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="p-3 rounded-circle bg-info bg-opacity-10">
+                                <i class="fas fa-coins fa-2x text-info"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0 text-info fw-bold">{{ valeur_stock|floatformat:0 }} DH</h3>
+                            <p class="text-muted mb-0">Valeur Stock</p>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-info" style="width: 90%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{% url 'rapports:rapport_list' %}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-chart-bar me-1"></i>Rapports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Rapides selon le rôle -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Actions Rapides
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% if user.role == 'EMPLOYEE' %}
+                        <div class="col-md-6">
+                            <a href="{% url 'demandes:demande_create' %}" class="btn btn-primary w-100 p-3 action-btn">
+                                <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                                <strong>Nouvelle Demande</strong><br>
+                                <small>Demander des articles</small>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'demandes:mes_demandes' %}" class="btn btn-outline-primary w-100 p-3 action-btn">
+                                <i class="fas fa-list fa-2x mb-2 d-block"></i>
+                                <strong>Mes Demandes</strong><br>
+                                <small>Suivre mes demandes</small>
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{% url 'articles:article_create' %}" class="btn btn-primary w-100 p-3 action-btn">
+                                <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                                <strong>Nouvel Article</strong><br>
+                                <small>Ajouter un produit</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{% url 'stocks:mouvement_create' %}" class="btn btn-success w-100 p-3 action-btn">
+                                <i class="fas fa-exchange-alt fa-2x mb-2 d-block"></i>
+                                <strong>Mouvement Stock</strong><br>
+                                <small>Entrée ou sortie</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{% url 'demandes:demande_list' %}" class="btn btn-warning w-100 p-3 action-btn">
+                                <i class="fas fa-clipboard-list fa-2x mb-2 d-block"></i>
+                                <strong>Gérer Demandes</strong><br>
+                                <small>Traiter les demandes</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <a href="{% url 'rapports:rapport_list' %}" class="btn btn-info w-100 p-3 action-btn">
+                                <i class="fas fa-chart-bar fa-2x mb-2 d-block"></i>
+                                <strong>Rapports</strong><br>
+                                <small>Analyses détaillées</small>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Mouvements de Stock (30 derniers jours)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="stockMovementsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Articles les Plus Mouvementés</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts and Actions Section compacte -->
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="compact-card animate-fadeInUp" style="animation-delay: 0.5s;">
+                <div class="card-header d-flex justify-content-between align-items-center py-2">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Alertes Stock Critique
+                    </h6>
+                    <span class="badge bg-danger">{{ articles_rupture|length }}</span>
+                </div>
+                <div class="card-body p-2">
+                    {% if articles_rupture %}
+                        {% for article in articles_rupture %}
+                        <div class="d-flex align-items-center p-2 mb-2 bg-light rounded animate-slideInRight" style="animation-delay: {{ forloop.counter0|add:600 }}ms;">
+                            <div class="me-2">
+                                <i class="fas fa-exclamation-circle text-warning"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold small">{{ article.nom }}</div>
+                                <div class="text-muted small">{{ article.reference }}</div>
+                            </div>
+                            <div class="me-2">
+                                <span class="badge bg-danger small">{{ article.stock_disponible }}</span>
+                            </div>
+                            <div>
+                                {% if user.can_manage_stock %}
+                                <a href="{% url 'articles:article_update' article.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                            <div class="small text-success fw-bold">Tout va bien !</div>
+                            <div class="small text-muted">Aucun stock critique</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="compact-card animate-fadeInUp" style="animation-delay: 0.7s;">
+                <div class="card-header py-2">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        Actions Rapides
+                    </h6>
+                </div>
+                <div class="card-body p-2">
+                    <div class="d-grid gap-2">
+                        {% if user.can_manage_stock %}
+                        <a href="{% url 'articles:article_create' %}" class="btn btn-primary btn-sm d-flex align-items-center">
+                            <i class="fas fa-plus me-2"></i>
+                            <span class="small">Nouvel Article</span>
+                        </a>
+
+                        <a href="{% url 'stocks:mouvement_create' %}" class="btn btn-success btn-sm d-flex align-items-center">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            <span class="small">Mouvement Stock</span>
+                        </a>
+
+                        <a href="{% url 'fournisseurs:fournisseur_create' %}" class="btn btn-info btn-sm d-flex align-items-center">
+                            <i class="fas fa-truck me-2"></i>
+                            <span class="small">Nouveau Fournisseur</span>
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'rapports:rapport_list' %}" class="btn btn-warning btn-sm d-flex align-items-center">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            <span class="small">Rapports</span>
+                        </a>
+
+                        {% if user.role == 'EMPLOYEE' %}
+                        <a href="{% url 'demandes:demande_create' %}" class="btn btn-outline-primary btn-sm d-flex align-items-center">
+                            <i class="fas fa-plus me-2"></i>
+                            <span class="small">Nouvelle Demande</span>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'demandes:demande_list' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            <span class="small">Gérer Demandes</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques du dashboard -->
+    <div class="row g-4 mb-4">
+        <!-- Évolution récente -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Évolution des Stocks (7 derniers jours)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="stockEvolutionChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Répartition par catégorie -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Répartition par Catégorie
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section des alertes (affichage conditionnel) -->
+    {% if articles_rupture and articles_rupture|length > 0 %}
+    <div class="row" id="alertes" style="display: none;">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <h5 class="mb-0 text-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Articles en Stock Critique ({{ articles_rupture|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        {% for article in articles_rupture|slice:":6" %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="alert alert-warning border-0 mb-2 p-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 small">{{ article.nom }}</h6>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-danger me-2 small">{{ article.stock_disponible }}</span>
+                                            <small class="text-muted">Seuil: {{ article.seuil_alerte }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if articles_rupture|length > 6 %}
+                        <div class="col-12">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ articles_rupture|length|add:"-6" }} autre(s) article(s) en stock critique...
+                                <a href="{% url 'articles:article_list' %}?stock_status=critique" class="text-warning">Voir tous</a>
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-const ctx = document.getElementById('movementChart').getContext('2d');
-const chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ['Entrées', 'Sorties'],
-        datasets: [{
-            label: 'Mouvements de Stock',
-            data: [{{ total_entrees }}, {{ total_sorties }}],
-            backgroundColor: ['#17a2b8', '#dc3545']
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { display: false }
-        },
-        scales: {
-            y: { beginAtZero: true }
+// Configuration des couleurs
+const colors = {
+    primary: '#065f46',
+    success: '#059669',
+    warning: '#d97706',
+    danger: '#dc2626',
+    info: '#0891b2'
+};
+
+// Variables pour les graphiques
+let stockEvolutionChart, categoryChart;
+
+// Fonction pour masquer/afficher les alertes
+function toggleAlerts() {
+    const alertsSection = document.getElementById('alertes');
+    if (alertsSection) {
+        if (alertsSection.style.display === 'none') {
+            alertsSection.style.display = 'block';
+            localStorage.setItem('alertsVisible', 'true');
+        } else {
+            alertsSection.style.display = 'none';
+            localStorage.setItem('alertsVisible', 'false');
         }
     }
+}
+
+// Mise à jour de l'heure et de la date
+function updateTime() {
+    const now = new Date();
+    const timeElement = document.getElementById('current-time');
+    const dateElement = document.getElementById('current-date');
+
+    if (timeElement) {
+        timeElement.textContent = now.toLocaleTimeString('fr-FR');
+    }
+
+    if (dateElement) {
+        dateElement.textContent = now.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+}
+
+// Charger les données des graphiques
+async function loadDashboardCharts() {
+    try {
+        // Données pour l'évolution du stock (données d'exemple)
+        const stockData = {
+            dates: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+            entrees: [10, 15, 8, 12, 20, 5, 18],
+            sorties: [8, 12, 10, 15, 18, 3, 14]
+        };
+
+        // Créer le graphique d'évolution
+        const stockCtx = document.getElementById('stockEvolutionChart').getContext('2d');
+        stockEvolutionChart = new Chart(stockCtx, {
+            type: 'line',
+            data: {
+                labels: stockData.dates,
+                datasets: [{
+                    label: 'Entrées',
+                    data: stockData.entrees,
+                    borderColor: colors.success,
+                    backgroundColor: colors.success + '20',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Sorties',
+                    data: stockData.sorties,
+                    borderColor: colors.danger,
+                    backgroundColor: colors.danger + '20',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Données pour les catégories (données d'exemple)
+        const categoryData = {
+            labels: ['Électronique', 'Mobilier', 'Fournitures', 'Équipements'],
+            data: [30, 25, 20, 25]
+        };
+
+        // Créer le graphique des catégories
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.labels,
+                datasets: [{
+                    data: categoryData.data,
+                    backgroundColor: [colors.primary, colors.success, colors.warning, colors.info],
+                    borderWidth: 0,
+                    cutout: '60%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Erreur lors du chargement des graphiques:', error);
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Charger les graphiques
+    loadDashboardCharts();
+
+    // Restaurer l'état des alertes
+    const alertsVisible = localStorage.getItem('alertsVisible');
+    if (alertsVisible === 'true') {
+        const alertsSection = document.getElementById('alertes');
+        if (alertsSection) {
+            alertsSection.style.display = 'block';
+        }
+    }
+
+    // Effets de survol pour les cartes
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-5px)';
+            card.style.boxShadow = '0 10px 25px rgba(6, 95, 70, 0.15)';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '';
+        });
+    });
+
+    // Animation des boutons d'action
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            btn.style.transform = 'translateY(-3px)';
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'translateY(0)';
+        });
+    });
 });
 </script>
 {% endblock %}

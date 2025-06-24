@@ -1,0 +1,18 @@
+<!-- commande_update_status.html -->
+{% extends 'base.html' %}
+
+{% block title %}Mettre à jour le statut de la Commande{% endblock %}
+
+{% block content %}
+<h1>Mettre à jour le statut de la Commande</h1>
+<form method="post">
+    {% csrf_token %}
+    <label for="statut">Statut:</label>
+    <select name="statut" id="statut" class="form-control">
+        <option value="EN_COURS" {% if commande.statut == 'EN_COURS' %}selected{% endif %}>En cours</option>
+        <option value="LIVREE" {% if commande.statut == 'LIVREE' %}selected{% endif %}>Livrée</option>
+        <option value="ANNULEE" {% if commande.statut == 'ANNULEE' %}selected{% endif %}>Annulée</option>
+    </select>
+    <button type="submit" class="btn btn-primary mt-3">Mettre à jour</button>
+</form>
+{% endblock %}

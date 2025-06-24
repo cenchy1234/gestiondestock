@@ -1,0 +1,14 @@
+<!-- commande_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}Passer une Commande{% endblock %}
+
+{% block content %}
+<h1>Passer une Commande</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Passer la Commande</button>
+</form>
+{% endblock %}

@@ -2,15 +2,11 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Inscription</title>
+    <title>Inscription désactivée</title>
 </head>
 <body>
-    <h1>Inscription</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">S'inscrire</button>
-    </form>
-    <p>Déjà un compte ? <a href="{% url 'login' %}">Connexion</a></p>
+    <h1>Inscription désactivée</h1>
+    <p>L'inscription en ligne n'est pas disponible. Veuillez contacter l'administrateur pour la création d'un compte.</p>
+    <p><a href="{% url 'login' %}">Retour à la connexion</a></p>
 </body>
 </html>

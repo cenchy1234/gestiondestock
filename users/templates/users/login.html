@@ -1,0 +1,21 @@
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class User(AbstractUser):
+    ROLES = [
+        ('ADMIN', 'Administrateur'),
+        ('STOCK_MANAGER', 'Gestionnaire de Stock'),
+        ('EMPLOYEE', 'Employé')
+    ]
+    role = models.CharField(
+        max_length=15, 
+        choices=ROLES,
+        default='EMPLOYEE',
+        verbose_name='Rôle'
+    )
+
+    def is_admin(self):
+        return self.role == 'ADMIN'
+
+    def is_stock_manager(self):
+        return self.role == 'STOCK_MANAGER'

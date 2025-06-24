@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Demande {{ demande.numero_demande }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-primary mb-1">
+                            <i class="fas fa-eye me-2"></i>
+                            Demande {{ demande.numero_demande }}
+                        </h2>
+                        <p class="text-muted mb-0">Détails de la demande</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if user.role == 'EMPLOYEE' %}
+                            <a href="{% url 'demandes:mes_demandes' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour
+                            </a>
+                        {% else %}
+                            <a href="{% url 'demandes:demande_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour
+                            </a>
+                            {% if demande.statut == 'EN_ATTENTE' %}
+                            <a href="{% url 'demandes:demande_traiter' demande.pk %}" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>Traiter
+                            </a>
+                            {% elif demande.statut == 'APPROUVEE' %}
+                            <a href="{% url 'demandes:demande_livrer' demande.pk %}" class="btn btn-info">
+                                <i class="fas fa-truck me-2"></i>Livrer
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Informations de la demande -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informations de la demande
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong>Numéro de demande:</strong><br>
+                            <span class="text-primary">{{ demande.numero_demande }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Statut:</strong><br>
+                            {% if demande.statut == 'EN_ATTENTE' %}
+                                <span class="badge bg-warning">En Attente</span>
+                            {% elif demande.statut == 'APPROUVEE' %}
+                                <span class="badge bg-success">Approuvée</span>
+                            {% elif demande.statut == 'REJETEE' %}
+                                <span class="badge bg-danger">Rejetée</span>
+                            {% elif demande.statut == 'TRAITEE' %}
+                                <span class="badge bg-info">Livrée</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Demandeur:</strong><br>
+                            {{ demande.demandeur.get_full_name|default:demande.demandeur.username }}<br>
+                            <small class="text-muted">{{ demande.demandeur.get_role_display }}</small>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Priorité:</strong><br>
+                            {% if demande.priorite == 'URGENTE' %}
+                                <span class="badge bg-danger">Urgente</span>
+                            {% elif demande.priorite == 'HAUTE' %}
+                                <span class="badge bg-warning">Haute</span>
+                            {% elif demande.priorite == 'NORMALE' %}
+                                <span class="badge bg-primary">Normale</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Basse</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Date de demande:</strong><br>
+                            {{ demande.date_demande|date:"d/m/Y à H:i" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Date de livraison souhaitée:</strong><br>
+                            {{ demande.date_livraison_souhaitee|date:"d/m/Y"|default:"Non spécifiée" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Article demandé -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-box me-2"></i>
+                        Article demandé
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong>Nom:</strong><br>
+                            {{ demande.article.nom }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Référence:</strong><br>
+                            {{ demande.article.reference }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Quantité demandée:</strong><br>
+                            <span class="badge bg-primary fs-6">{{ demande.quantite_demandee }} unités</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Stock disponible:</strong><br>
+                            <span class="badge bg-success fs-6">{{ demande.article.stock_disponible }} unités</span>
+                        </div>
+                        {% if demande.quantite_accordee %}
+                        <div class="col-md-6">
+                            <strong>Quantité accordée:</strong><br>
+                            <span class="badge bg-info fs-6">{{ demande.quantite_accordee }} unités</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Motif et remarques -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comment me-2"></i>
+                        Motif et remarques
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Motif de la demande:</strong><br>
+                        <p class="mt-2">{{ demande.motif }}</p>
+                    </div>
+                    {% if demande.remarques %}
+                    <div class="mb-3">
+                        <strong>Remarques:</strong><br>
+                        <p class="mt-2">{{ demande.remarques }}</p>
+                    </div>
+                    {% endif %}
+                    {% if demande.commentaire_traitement %}
+                    <div class="alert alert-info">
+                        <strong>Commentaire du gestionnaire:</strong><br>
+                        {{ demande.commentaire_traitement }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Historique -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Historique
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if historique %}
+                    <div class="timeline">
+                        {% for event in historique %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">{{ event.action }}</h6>
+                                <p class="text-muted small mb-1">
+                                    Par {{ event.utilisateur.get_full_name|default:event.utilisateur.username }}
+                                </p>
+                                <p class="text-muted small">
+                                    {{ event.date_action|date:"d/m/Y à H:i" }}
+                                </p>
+                                {% if event.details %}
+                                <p class="small">{{ event.details }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Aucun historique disponible.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.timeline-content {
+    background: var(--light);
+    padding: 1rem;
+    border-radius: var(--radius);
+    border-left: 3px solid var(--primary);
+}
+</style>
+{% endblock %}

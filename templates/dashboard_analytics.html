@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Analytics IA{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header avec animations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white shadow-lg">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">🚀 Dashboard Analytics IA</h2>
+                            <p class="mb-0 opacity-75">Intelligence Artificielle pour la Gestion des Stocks</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-success fs-6 pulse">
+                                <i class="fas fa-circle me-1"></i>EN DIRECT
+                            </div>
+                            <div class="small mt-1">
+                                Dernière mise à jour: <span id="last-update">--:--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques en temps réel -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-exchange-alt fa-2x"></i>
+                    </div>
+                    <h3 class="mb-0" id="mouvements-today">--</h3>
+                    <p class="text-muted mb-0">Mouvements aujourd'hui</p>
+                    <div class="mt-2">
+                        <span class="badge bg-info" id="trend-badge">
+                            <i class="fas fa-arrow-up"></i> Tendance
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-coins fa-2x"></i>
+                    </div>
+                    <h3 class="mb-0" id="stock-value">-- DH</h3>
+                    <p class="text-muted mb-0">Valeur totale stock</p>
+                    <div class="mt-2">
+                        <span class="badge bg-success">
+                            <i class="fas fa-chart-line"></i> Valorisé
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                    <h3 class="mb-0" id="articles-critiques">--</h3>
+                    <p class="text-muted mb-0">Articles critiques</p>
+                    <div class="mt-2">
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-eye"></i> Surveillance
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-brain fa-2x"></i>
+                    </div>
+                    <h3 class="mb-0" id="prediction-accuracy">--%</h3>
+                    <p class="text-muted mb-0">Précision IA</p>
+                    <div class="mt-2">
+                        <span class="badge bg-info">
+                            <i class="fas fa-robot"></i> IA Active
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes intelligentes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell text-warning me-2"></i>Alertes Intelligentes
+                        <span class="badge bg-danger ms-2" id="alerts-count">0</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="alerts-container">
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                            <p>Chargement des alertes IA...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prédictions IA et Recommandations -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-crystal-ball text-primary me-2"></i>Prédictions IA - Ruptures de Stock
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="predictions-container">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-brain fa-spin fa-3x mb-3"></i>
+                            <p>L'IA analyse vos données...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Recommandations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="recommendations-container">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-cog fa-spin fa-2x mb-2"></i>
+                            <p>Génération des recommandations...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphique de performance -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area text-success me-2"></i>Analyse de Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles CSS pour les animations -->
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.alert-item {
+    border-left: 4px solid;
+    animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.prediction-item {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dashboard Analytics IA - JavaScript
+class AnalyticsDashboard {
+    constructor() {
+        this.updateInterval = 30000; // 30 secondes
+        this.init();
+    }
+
+    init() {
+        this.loadLiveStats();
+        this.loadAlerts();
+        this.loadPredictions();
+        this.loadRecommendations();
+        this.loadPerformanceMetrics();
+        
+        // Mise à jour automatique
+        setInterval(() => {
+            this.loadLiveStats();
+            this.loadAlerts();
+        }, this.updateInterval);
+    }
+
+    async loadLiveStats() {
+        try {
+            const response = await fetch('/api/live-stats/');
+            const result = await response.json();
+            
+            if (result.success) {
+                const data = result.data;
+                document.getElementById('mouvements-today').textContent = data.mouvements_today;
+                document.getElementById('stock-value').textContent = data.total_stock_value.toFixed(2) + ' DH';
+                document.getElementById('articles-critiques').textContent = data.articles_critiques;
+                document.getElementById('last-update').textContent = data.last_update;
+                
+                // Mise à jour de la tendance
+                const trendBadge = document.getElementById('trend-badge');
+                const trendIcon = data.trend === 'up' ? 'fa-arrow-up' : 
+                                data.trend === 'down' ? 'fa-arrow-down' : 'fa-minus';
+                const trendClass = data.trend === 'up' ? 'bg-success' : 
+                                 data.trend === 'down' ? 'bg-danger' : 'bg-secondary';
+                
+                trendBadge.className = `badge ${trendClass}`;
+                trendBadge.innerHTML = `<i class="fas ${trendIcon}"></i> ${data.trend.toUpperCase()}`;
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des stats:', error);
+        }
+    }
+
+    async loadAlerts() {
+        try {
+            const response = await fetch('/api/alerts/');
+            const result = await response.json();
+            
+            if (result.success) {
+                const alerts = result.data;
+                document.getElementById('alerts-count').textContent = alerts.length;
+                
+                const container = document.getElementById('alerts-container');
+                if (alerts.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-success py-3">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p>Aucune alerte critique. Tout va bien ! 🎉</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = alerts.map(alert => `
+                        <div class="alert alert-${alert.level} alert-item border-0 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="alert-heading mb-1">${alert.title}</h6>
+                                    <p class="mb-0">${alert.message}</p>
+                                </div>
+                                <a href="${alert.action_url}" class="btn btn-sm btn-outline-${alert.level}">
+                                    Action
+                                </a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des alertes:', error);
+        }
+    }
+
+    async loadPredictions() {
+        try {
+            const response = await fetch('/api/ai-predictions/');
+            const result = await response.json();
+            
+            if (result.success) {
+                const predictions = result.data;
+                const container = document.getElementById('predictions-container');
+                
+                if (predictions.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-success py-4">
+                            <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                            <p>Aucune rupture prévue dans les 30 prochains jours ! 🛡️</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = predictions.slice(0, 5).map((pred, index) => `
+                        <div class="prediction-item mb-3 p-3 border rounded" style="animation-delay: ${index * 0.1}s">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">${pred.article_nom}</h6>
+                                    <small class="text-muted">${pred.article_reference}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-${pred.risk_level === 'CRITIQUE' ? 'danger' : pred.risk_level === 'ÉLEVÉ' ? 'warning' : 'info'}">
+                                        ${pred.risk_level}
+                                    </span>
+                                    <div class="small mt-1">${pred.days_until_rupture} jours</div>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <small class="text-muted">Stock actuel</small>
+                                        <div class="fw-bold">${pred.current_stock}</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted">Consommation/j</small>
+                                        <div class="fw-bold">${pred.avg_consumption}</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted">Recommandé</small>
+                                        <div class="fw-bold text-success">${pred.recommended_order}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des prédictions:', error);
+        }
+    }
+
+    async loadRecommendations() {
+        try {
+            const response = await fetch('/api/recommendations/');
+            const result = await response.json();
+            
+            if (result.success) {
+                const recommendations = result.data;
+                const container = document.getElementById('recommendations-container');
+                
+                container.innerHTML = recommendations.map(rec => `
+                    <div class="mb-3 p-3 border rounded bg-light">
+                        <h6 class="mb-2">${rec.title}</h6>
+                        <p class="small mb-2">${rec.action}</p>
+                        ${rec.type === 'INVENTORY_VALUE' ? 
+                            `<div class="text-center">
+                                <span class="h4 text-success">${rec.data.value.toFixed(2)} DH</span>
+                            </div>` : 
+                            rec.data.length ? `
+                                <div class="small">
+                                    ${rec.data.slice(0, 3).map(item => 
+                                        `<div class="d-flex justify-content-between">
+                                            <span>${item.nom || item.article__nom}</span>
+                                            <span class="fw-bold">${item.total_sold || item.stock || item.valeur}</span>
+                                        </div>`
+                                    ).join('')}
+                                </div>
+                            ` : ''
+                        }
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des recommandations:', error);
+        }
+    }
+
+    async loadPerformanceMetrics() {
+        try {
+            const response = await fetch('/api/performance/');
+            const result = await response.json();
+            
+            if (result.success) {
+                const metrics = result.data;
+                document.getElementById('prediction-accuracy').textContent = metrics.prediction_accuracy + '%';
+                
+                // Créer le graphique de performance
+                this.createPerformanceChart(metrics);
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des métriques:', error);
+        }
+    }
+
+    createPerformanceChart(metrics) {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Articles OK', 'Articles Critiques', 'Prédiction IA'],
+                datasets: [{
+                    data: [
+                        metrics.total_articles - metrics.articles_rupture,
+                        metrics.articles_rupture,
+                        metrics.prediction_accuracy
+                    ],
+                    backgroundColor: [
+                        '#28a745',
+                        '#dc3545',
+                        '#17a2b8'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Initialiser le dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    new AnalyticsDashboard();
+});
+</script>
+{% endblock %}

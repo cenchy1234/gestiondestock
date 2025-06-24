@@ -1,22 +1,12 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Inscription{% endblock %}
-
+{% block title %}Inscription désactivée{% endblock %}
 {% block content %}
-<div class="form-container">
-    <h2>Inscription</h2>
-    <form method="post">
-        {% csrf_token %}
-        <input type="text" name="username" placeholder="Nom d'utilisateur" required><br>
-        <input type="password" name="password" placeholder="Mot de passe" required><br>
-        <select name="role" required>
-            <option value="">Sélectionnez un rôle</option>
-            <option value="admin">Administrateur</option>
-            <option value="gestionnaire">Gestionnaire de stock</option>
-            <option value="employe">Employé</option>
-        </select><br>
-        <button type="submit" class="btn">S'inscrire</button>
-    </form>
+<div class="container mt-5">
+    <div class="alert alert-warning text-center">
+        <h2>Inscription désactivée</h2>
+        <p>L'inscription en ligne n'est pas disponible.<br>
+        Veuillez contacter l'administrateur pour la création d'un compte.</p>
+        <a href="{% url 'login' %}" class="btn btn-primary mt-3">Retour à la connexion</a>
+    </div>
 </div>
 {% endblock %}

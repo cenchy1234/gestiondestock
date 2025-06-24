@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Livrer Demande {{ demande.numero_demande }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-primary mb-1">
+                            <i class="fas fa-truck me-2"></i>
+                            Livrer Demande {{ demande.numero_demande }}
+                        </h2>
+                        <p class="text-muted mb-0">Marquer la demande comme livrée</p>
+                    </div>
+                    <a href="{% url 'demandes:demande_detail' demande.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Confirmation de livraison
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Résumé de la demande -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            Résumé de la demande
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <strong>Demandeur:</strong><br>
+                                {{ demande.demandeur.get_full_name|default:demande.demandeur.username }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Article:</strong><br>
+                                {{ demande.article.nom }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Quantité accordée:</strong><br>
+                                <span class="badge bg-success">{{ demande.quantite_accordee|default:demande.quantite_demandee }} unités</span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Date d'approbation:</strong><br>
+                                {{ demande.date_traitement|date:"d/m/Y à H:i" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulaire de livraison -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="commentaire" class="form-label">
+                                <i class="fas fa-comment me-1"></i>
+                                Commentaire de livraison (optionnel)
+                            </label>
+                            <textarea name="commentaire" id="commentaire" class="form-control" rows="3" 
+                                      placeholder="Ajoutez des informations sur la livraison (lieu, heure, conditions, etc.)"></textarea>
+                        </div>
+
+                        <!-- Avertissement -->
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Attention !</strong> Cette action va :
+                            <ul class="mb-0 mt-2">
+                                <li>Marquer la demande comme "Livrée"</li>
+                                <li>Créer un mouvement de sortie de stock automatiquement</li>
+                                <li>Déduire {{ demande.quantite_accordee|default:demande.quantite_demandee }} unités du stock de {{ demande.article.nom }}</li>
+                                <li>Cette action est <strong>irréversible</strong></li>
+                            </ul>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-check me-2"></i>
+                                    Confirmer la livraison
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{% url 'demandes:demande_detail' demande.pk %}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-times me-2"></i>
+                                    Annuler
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

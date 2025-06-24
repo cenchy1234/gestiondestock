@@ -20,14 +20,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # My apps
-    'users',
-    'articles',
-    'stocks',
-    'fournisseurs',
-    'rapports',
-    'core',
+    
+    # Local apps
+    'users.apps.UsersConfig',
+    'articles.apps.ArticlesConfig',
+    'stocks.apps.StocksConfig',
+    'fournisseurs.apps.FournisseursConfig',
+    'rapports.apps.RapportsConfig',
+    'demandes.apps.DemandesConfig',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
@@ -45,7 +46,14 @@ ROOT_URLCONF = 'projet_gestion_stock.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # ✅ Important for dashboard.html
+        'DIRS': [
+            BASE_DIR / 'templates',
+            BASE_DIR / 'articles' / 'templates',
+            BASE_DIR / 'stocks' / 'templates',
+            BASE_DIR / 'users' / 'templates',
+            BASE_DIR / 'rapports' / 'templates',
+            BASE_DIR / 'fournisseurs' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,7 +93,15 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Media files configuration
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Message framework
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -94,6 +110,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
 # Login/Logout redirects
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = 'core:dashboard'
+LOGOUT_REDIRECT_URL = 'users:login'

@@ -1,18 +1,219 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Ajouter Mouvement</title>
-</head>
-<body>
-    <h1>Ajouter un Mouvement</h1>
+{% extends 'base.html' %}
+{% load static %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Sauvegarder</button>
-    </form>
+{% block title %}Ajouter un Mouvement de Stock{% endblock %}
 
-    <a href="{% url 'mouvement_list' %}">Annuler</a>
-</body>
-</html>
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Ajouter un Mouvement de Stock
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Erreur de validation</h5>
+                            {% for error in form.non_field_errors %}
+                                <div style="white-space: pre-line;">{{ error }}</div>
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.article.id_for_label }}" class="form-label">
+                                    <i class="fas fa-box me-1"></i>{{ form.article.label }} *
+                                </label>
+                                {{ form.article }}
+                                {% if form.article.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.article.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.mouvement_type.id_for_label }}" class="form-label">
+                                    <i class="fas fa-arrows-alt-v me-1"></i>{{ form.mouvement_type.label }} *
+                                </label>
+                                {{ form.mouvement_type }}
+                                {% if form.mouvement_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.mouvement_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quantite.id_for_label }}" class="form-label">
+                                    <i class="fas fa-sort-numeric-up me-1"></i>{{ form.quantite.label }} *
+                                </label>
+                                {{ form.quantite }}
+                                {% if form.quantite.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.quantite.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_mouvement.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>{{ form.date_mouvement.label }} *
+                                </label>
+                                {{ form.date_mouvement }}
+                                {% if form.date_mouvement.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.date_mouvement.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">{{ form.date_mouvement.help_text }}</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.remarque.id_for_label }}" class="form-label">
+                                <i class="fas fa-comment me-1"></i>{{ form.remarque.label }}
+                            </label>
+                            {{ form.remarque }}
+                            {% if form.remarque.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.remarque.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Alerte pour les stocks critiques -->
+                        <div id="stock-alert" class="alert alert-warning d-none">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <span id="stock-message"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'stocks:mouvement_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Enregistrer le mouvement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Bootstrap form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Vérification du stock disponible
+document.addEventListener('DOMContentLoaded', function() {
+    const articleSelect = document.getElementById('{{ form.article.id_for_label }}');
+    const typeSelect = document.getElementById('{{ form.mouvement_type.id_for_label }}');
+    const quantiteInput = document.getElementById('{{ form.quantite.id_for_label }}');
+    const stockAlert = document.getElementById('stock-alert');
+    const stockMessage = document.getElementById('stock-message');
+    const submitBtn = document.querySelector('button[type="submit"]');
+
+    // Données des stocks (vous pourriez les passer depuis Django)
+    const stockData = {
+        {% for article in articles %}
+        '{{ article.id }}': {
+            'nom': '{{ article.nom }}',
+            'stock': {{ article.stock_disponible }},
+            'seuil': {{ article.seuil_alerte }}
+        },
+        {% endfor %}
+    };
+
+    function checkStock() {
+        if (articleSelect.value && typeSelect.value === 'SORTIE' && quantiteInput.value) {
+            const articleId = articleSelect.value;
+            const quantite = parseInt(quantiteInput.value);
+            const article = stockData[articleId];
+
+            if (article) {
+                if (article.stock === 0) {
+                    stockAlert.className = 'alert alert-danger';
+                    stockMessage.innerHTML = `
+                        <strong>❌ ERREUR :</strong> Aucun stock disponible pour "${article.nom}" !<br>
+                        <small>Impossible d'effectuer une sortie.</small>
+                    `;
+                    stockAlert.classList.remove('d-none');
+                    submitBtn.disabled = true;
+                } else if (quantite > article.stock) {
+                    stockAlert.className = 'alert alert-danger';
+                    stockMessage.innerHTML = `
+                        <strong>❌ ERREUR :</strong> Stock insuffisant pour "${article.nom}" !<br>
+                        <small>📦 Stock disponible : <strong>${article.stock} unités</strong></small><br>
+                        <small>📤 Quantité demandée : <strong>${quantite} unités</strong></small><br>
+                        <small>⚠️ Il manque <strong>${quantite - article.stock} unités</strong></small><br>
+                        <small>💡 Réduisez la quantité à <strong>${article.stock} unités maximum</strong></small>
+                    `;
+                    stockAlert.classList.remove('d-none');
+                    submitBtn.disabled = true;
+                } else if (quantite > article.stock - article.seuil) {
+                    stockAlert.className = 'alert alert-warning';
+                    stockMessage.innerHTML = `
+                        <strong>⚠️ ATTENTION :</strong> Cette sortie va mettre le stock en situation critique !<br>
+                        <small>📦 Stock après sortie : <strong>${article.stock - quantite} unités</strong></small><br>
+                        <small>🚨 Seuil d'alerte : <strong>${article.seuil} unités</strong></small>
+                    `;
+                    stockAlert.classList.remove('d-none');
+                    submitBtn.disabled = false;
+                } else {
+                    stockAlert.className = 'alert alert-success';
+                    stockMessage.innerHTML = `
+                        <strong>✅ OK :</strong> Stock suffisant pour cette sortie.<br>
+                        <small>📦 Stock après sortie : <strong>${article.stock - quantite} unités</strong></small>
+                    `;
+                    stockAlert.classList.remove('d-none');
+                    submitBtn.disabled = false;
+                }
+            }
+        } else {
+            stockAlert.classList.add('d-none');
+            submitBtn.disabled = false;
+        }
+    }
+
+    articleSelect.addEventListener('change', checkStock);
+    typeSelect.addEventListener('change', checkStock);
+    quantiteInput.addEventListener('input', checkStock);
+});
+</script>
+{% endblock %}

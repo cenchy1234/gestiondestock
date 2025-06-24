@@ -11,15 +11,20 @@ class Fournisseur(models.Model):
         return self.nom
 
 class Commande(models.Model):
-    fournisseur = models.ForeignKey(Fournisseur, on_delete=models.CASCADE)
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
-    quantite = models.PositiveIntegerField()
-    date_commande = models.DateTimeField(auto_now_add=True)
-    statut = models.CharField(max_length=20, choices=[
+    STATUT_CHOICES = [
+        ('EN_ATTENTE', 'En attente'),
         ('EN_COURS', 'En cours'),
         ('LIVREE', 'Livrée'),
         ('ANNULEE', 'Annulée')
-    ], default='EN_COURS')
+    ]
+    
+    fournisseur = models.ForeignKey(Fournisseur, on_delete=models.CASCADE, related_name='commandes')
+    article = models.ForeignKey('articles.Article', on_delete=models.CASCADE)
+    quantite = models.PositiveIntegerField()
+    date_commande = models.DateTimeField(auto_now_add=True)
+    date_livraison = models.DateTimeField(null=True, blank=True)
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='EN_ATTENTE')
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Commande {self.article.nom} - {self.fournisseur.nom}"
+        return f"Commande #{self.id} - {self.fournisseur.nom}"

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Demandes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-primary mb-1">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            Gestion des Demandes
+                        </h2>
+                        <p class="text-muted mb-0">Gérez toutes les demandes d'articles</p>
+                    </div>
+                    {% if user.can_manage_stock %}
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="fas fa-filter me-2"></i>Filtres
+                        </button>
+                        <a href="{% url 'demandes:demande_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Nouvelle Demande
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques pour gestionnaires -->
+    {% if stats %}
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card fade-in">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="p-3 rounded-circle bg-primary bg-opacity-10">
+                            <i class="fas fa-list fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-primary mb-0">{{ stats.total }}</h4>
+                        <p class="text-muted mb-0 small">Total Demandes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card warning slide-in-left" style="animation-delay: 0.1s;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="p-3 rounded-circle bg-warning bg-opacity-10">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-warning mb-0">{{ stats.en_attente }}</h4>
+                        <p class="text-muted mb-0 small">En Attente</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card success slide-in-left" style="animation-delay: 0.2s;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="p-3 rounded-circle bg-success bg-opacity-10">
+                            <i class="fas fa-check fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-success mb-0">{{ stats.approuvees }}</h4>
+                        <p class="text-muted mb-0 small">Approuvées</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card danger slide-in-left" style="animation-delay: 0.3s;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <div class="p-3 rounded-circle bg-warning bg-opacity-10">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-warning mb-0">{{ stats.urgentes }}</h4>
+                        <p class="text-muted mb-0 small">Urgentes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Liste des demandes -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Liste des Demandes
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if demandes %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Numéro</th>
+                            <th>Demandeur</th>
+                            <th>Article</th>
+                            <th>Quantité</th>
+                            <th>Statut</th>
+                            <th>Priorité</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for demande in demandes %}
+                        <tr class="scale-in" style="animation-delay: {{ forloop.counter0|add:100 }}ms;">
+                            <td>
+                                <span class="fw-bold text-primary">{{ demande.numero_demande }}</span>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ demande.demandeur.get_full_name|default:demande.demandeur.username }}</strong><br>
+                                    <small class="text-muted">{{ demande.demandeur.get_role_display }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ demande.article.nom }}</strong><br>
+                                    <small class="text-muted">{{ demande.article.reference }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ demande.quantite_demandee }}</span>
+                                {% if demande.quantite_accordee and demande.quantite_accordee != demande.quantite_demandee %}
+                                <br><small class="text-success">Accordée: {{ demande.quantite_accordee }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if demande.statut == 'EN_ATTENTE' %}
+                                    <span class="badge bg-warning">En Attente</span>
+                                {% elif demande.statut == 'APPROUVEE' %}
+                                    <span class="badge bg-success">Approuvée</span>
+                                {% elif demande.statut == 'REJETEE' %}
+                                    <span class="badge bg-danger">Rejetée</span>
+                                {% elif demande.statut == 'TRAITEE' %}
+                                    <span class="badge bg-info">Livrée</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if demande.priorite == 'URGENTE' %}
+                                    <span class="badge bg-danger">Urgente</span>
+                                {% elif demande.priorite == 'HAUTE' %}
+                                    <span class="badge bg-warning">Haute</span>
+                                {% elif demande.priorite == 'NORMALE' %}
+                                    <span class="badge bg-primary">Normale</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Basse</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ demande.date_demande|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'demandes:demande_detail' demande.pk %}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user.can_manage_stock and demande.statut == 'EN_ATTENTE' %}
+                                    <a href="{% url 'demandes:demande_traiter' demande.pk %}" 
+                                       class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if demandes.has_other_pages %}
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center">
+                    {% if demandes.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ demandes.previous_page_number }}">Précédent</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in demandes.paginator.page_range %}
+                        {% if demandes.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if demandes.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ demandes.next_page_number }}">Suivant</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Aucune demande</h4>
+                <p class="text-muted">Aucune demande n'a été créée pour le moment.</p>
+                {% if user.role == 'EMPLOYEE' %}
+                <a href="{% url 'demandes:demande_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Créer une demande
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

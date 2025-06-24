@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">Liste des Commandes</h1>
+        <a href="{% url 'fournisseurs:commande_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Nouvelle Commande
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Fournisseur</th>
+                            <th>Article</th>
+                            <th>Quantité</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for commande in commandes %}
+                        <tr>
+                            <td>#{{ commande.id }}</td>
+                            <td>{{ commande.fournisseur.nom }}</td>
+                            <td>{{ commande.article.nom }}</td>
+                            <td>{{ commande.quantite }}</td>
+                            <td>{{ commande.date_commande|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge status-{{ commande.statut|lower }}">
+                                    {{ commande.get_statut_display }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    <a href="{% url 'fournisseurs:commande_update_status' commande.id %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit me-1"></i>Statut
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-box-open fa-2x mb-3"></i>
+                                <p>Aucune commande trouvée</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .page-title {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.825rem;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-group .btn {
+        transition: all 0.2s;
+    }
+
+    .btn-group .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .status-en-attente {
+        background-color: #f8f9fa;
+        color: #495057;
+    }
+
+    .status-en-cours {
+        background-color: #e3f2fd;
+        color: #0d47a1;
+    }
+
+    .status-livree {
+        background-color: #e8f5e9;
+        color: #1b5e20;
+    }
+
+    .status-annulee {
+        background-color: #ffebee;
+        color: #b71c1c;
+    }
+
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .table-hover tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.02);
+        transform: scale(1.001);
+    }
+
+    @media (max-width: 768px) {
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}

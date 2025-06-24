@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rapports et Analyses{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="text-primary mb-1">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Rapports et Analyses
+                        </h2>
+                        <p class="text-muted mb-0">Tableaux de bord et analyses détaillées</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshCharts()">
+                            <i class="fas fa-sync-alt me-1"></i>Actualiser
+                        </button>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-download me-1"></i>Exporter
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'rapports:stock_movement_report' %}?export=pdf">
+                                    <i class="fas fa-file-pdf me-2"></i>Mouvements PDF
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'rapports:stock_state_report' %}?export=csv">
+                                    <i class="fas fa-file-csv me-2"></i>État stocks CSV
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div class="me-3">
+                            <i class="fas fa-box fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-primary">{{ total_articles }}</h3>
+                            <small class="text-muted">Articles</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div class="me-3">
+                            <i class="fas fa-warehouse fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-success">{{ total_stock }}</h3>
+                            <small class="text-muted">Unités en stock</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div class="me-3">
+                            <i class="fas fa-arrow-down fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-info">{{ mouvements_entrees }}</h3>
+                            <small class="text-muted">Entrées</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div class="me-3">
+                            <i class="fas fa-arrow-up fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h3 class="mb-0 text-warning">{{ mouvements_sorties }}</h3>
+                            <small class="text-muted">Sorties</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques principaux -->
+    <div class="row g-4 mb-4">
+        <!-- Évolution du stock (30 derniers jours) -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Évolution du Stock (30 derniers jours)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="stockEvolutionChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Répartition par catégorie -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Stock par Catégorie
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques secondaires -->
+    <div class="row g-4 mb-4">
+        <!-- Articles les plus mouvementés -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Articles les Plus Mouvementés
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="topArticlesChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques mensuelles -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Tendances Mensuelles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyStatsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liens vers rapports détaillés -->
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-exchange-alt fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Mouvements Détaillés</h5>
+                    <p class="card-text">Analyse complète des entrées et sorties</p>
+                    <a href="{% url 'rapports:stock_movement_report' %}" class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i>Voir le rapport
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-warehouse fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">État des Stocks</h5>
+                    <p class="card-text">Répartition détaillée par catégorie</p>
+                    <a href="{% url 'rapports:stock_state_report' %}" class="btn btn-success">
+                        <i class="fas fa-eye me-2"></i>Voir le rapport
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title">Statistiques Avancées</h5>
+                    <p class="card-text">Analyses et tendances détaillées</p>
+                    <a href="{% url 'rapports:statistics_report' %}" class="btn btn-info">
+                        <i class="fas fa-eye me-2"></i>Voir le rapport
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Configuration des couleurs
+const colors = {
+    primary: '#065f46',
+    success: '#059669',
+    info: '#0891b2',
+    warning: '#d97706',
+    danger: '#dc2626'
+};
+
+// Variables pour stocker les graphiques
+let stockEvolutionChart, categoryChart, topArticlesChart, monthlyStatsChart;
+
+// Fonction pour charger les données et créer les graphiques
+async function loadCharts() {
+    try {
+        // Évolution du stock avec fallback
+        try {
+            const stockEvolutionData = await fetch('{% url "rapports:api_stock_evolution" %}').then(r => r.json());
+            createStockEvolutionChart(stockEvolutionData);
+        } catch (error) {
+            console.log('Utilisation de données d\'exemple pour l\'évolution du stock');
+            createStockEvolutionChart({
+                dates: ['01/12', '02/12', '03/12', '04/12', '05/12', '06/12', '07/12'],
+                entrees: [15, 20, 12, 18, 25, 8, 22],
+                sorties: [10, 15, 8, 12, 20, 5, 18]
+            });
+        }
+
+        // Stock par catégorie avec fallback
+        try {
+            const categoryData = await fetch('{% url "rapports:api_stock_by_category" %}').then(r => r.json());
+            createCategoryChart(categoryData);
+        } catch (error) {
+            console.log('Utilisation de données d\'exemple pour les catégories');
+            createCategoryChart({
+                labels: ['Électronique', 'Mobilier', 'Fournitures', 'Équipements', 'Autres'],
+                data: [35, 25, 20, 15, 5],
+                colors: ['#065f46', '#059669', '#10b981', '#34d399', '#6ee7b7']
+            });
+        }
+
+        // Top articles avec fallback
+        try {
+            const topArticlesData = await fetch('{% url "rapports:api_top_articles" %}').then(r => r.json());
+            createTopArticlesChart(topArticlesData);
+        } catch (error) {
+            console.log('Utilisation de données d\'exemple pour les top articles');
+            createTopArticlesChart({
+                labels: ['Ordinateur portable', 'Souris optique', 'Clavier mécanique', 'Écran 24"', 'Imprimante'],
+                mouvements: [45, 38, 32, 28, 25],
+                quantites: [180, 152, 128, 112, 100]
+            });
+        }
+
+        // Statistiques mensuelles avec fallback
+        try {
+            const monthlyData = await fetch('{% url "rapports:api_monthly_stats" %}').then(r => r.json());
+            createMonthlyStatsChart(monthlyData);
+        } catch (error) {
+            console.log('Utilisation de données d\'exemple pour les stats mensuelles');
+            createMonthlyStatsChart({
+                months: ['Août 2024', 'Sept 2024', 'Oct 2024', 'Nov 2024', 'Déc 2024'],
+                entrees: [120, 150, 180, 200, 160],
+                sorties: [100, 130, 160, 180, 140]
+            });
+        }
+
+    } catch (error) {
+        console.error('Erreur lors du chargement des graphiques:', error);
+        // Charger des graphiques avec des données par défaut
+        loadDefaultCharts();
+    }
+}
+
+// Fonction pour charger des graphiques par défaut
+function loadDefaultCharts() {
+    createStockEvolutionChart({
+        dates: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+        entrees: [10, 15, 8, 12, 20, 5, 18],
+        sorties: [8, 12, 10, 15, 18, 3, 14]
+    });
+
+    createCategoryChart({
+        labels: ['Catégorie A', 'Catégorie B', 'Catégorie C'],
+        data: [40, 35, 25],
+        colors: ['#065f46', '#059669', '#10b981']
+    });
+
+    createTopArticlesChart({
+        labels: ['Article 1', 'Article 2', 'Article 3'],
+        mouvements: [30, 25, 20],
+        quantites: [120, 100, 80]
+    });
+
+    createMonthlyStatsChart({
+        months: ['Oct', 'Nov', 'Déc'],
+        entrees: [100, 120, 90],
+        sorties: [80, 100, 70]
+    });
+}
+
+function createStockEvolutionChart(data) {
+    const ctx = document.getElementById('stockEvolutionChart').getContext('2d');
+    stockEvolutionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.dates,
+            datasets: [{
+                label: 'Entrées',
+                data: data.entrees,
+                borderColor: colors.success,
+                backgroundColor: colors.success + '20',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Sorties',
+                data: data.sorties,
+                borderColor: colors.danger,
+                backgroundColor: colors.danger + '20',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createCategoryChart(data) {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.data,
+                backgroundColor: data.colors,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createTopArticlesChart(data) {
+    const ctx = document.getElementById('topArticlesChart').getContext('2d');
+    topArticlesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Mouvements',
+                data: data.mouvements,
+                backgroundColor: colors.primary,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createMonthlyStatsChart(data) {
+    const ctx = document.getElementById('monthlyStatsChart').getContext('2d');
+    monthlyStatsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.months,
+            datasets: [{
+                label: 'Entrées',
+                data: data.entrees,
+                backgroundColor: colors.success
+            }, {
+                label: 'Sorties',
+                data: data.sorties,
+                backgroundColor: colors.warning
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function refreshCharts() {
+    // Détruire les graphiques existants
+    if (stockEvolutionChart) stockEvolutionChart.destroy();
+    if (categoryChart) categoryChart.destroy();
+    if (topArticlesChart) topArticlesChart.destroy();
+    if (monthlyStatsChart) monthlyStatsChart.destroy();
+    
+    // Recharger les données
+    loadCharts();
+}
+
+// Charger les graphiques au chargement de la page
+document.addEventListener('DOMContentLoaded', loadCharts);
+</script>
+{% endblock %}

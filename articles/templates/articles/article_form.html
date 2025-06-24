@@ -1,17 +1,163 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Ajouter un Article</title>
-</head>
-<body>
-    <h1>Ajouter un Article</h1>
+{% extends 'base.html' %}
+{% load static %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Sauvegarder</button>
-        <a href="{% url 'article_list' %}">Annuler</a>
-    </form>
-</body>
-</html>
+{% block title %}{% if form.instance.pk %}Modifier{% else %}Ajouter{% endif %} un Article{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header {% if form.instance.pk %}bg-warning text-dark{% else %}bg-primary text-white{% endif %}">
+                    <h4 class="mb-0">
+                        <i class="fas {% if form.instance.pk %}fa-edit{% else %}fa-plus{% endif %} me-2"></i>
+                        {% if form.instance.pk %}Modifier l'article{% else %}Ajouter un nouvel article{% endif %}
+                    </h4>
+                    {% if form.instance.pk %}
+                    <small>Modification de: {{ form.instance.nom }}</small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.nom.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>{{ form.nom.label }} *
+                                </label>
+                                {{ form.nom }}
+                                {% if form.nom.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.nom.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.reference.id_for_label }}" class="form-label">
+                                    <i class="fas fa-barcode me-1"></i>{{ form.reference.label }} *
+                                </label>
+                                {{ form.reference }}
+                                {% if form.reference.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.reference.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.categorie.id_for_label }}" class="form-label">
+                                    <i class="fas fa-list me-1"></i>{{ form.categorie.label }} *
+                                </label>
+                                {{ form.categorie }}
+                                {% if form.categorie.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.categorie.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.prix.id_for_label }}" class="form-label">
+                                    <i class="fas fa-euro-sign me-1"></i>{{ form.prix.label }} *
+                                </label>
+                                <div class="input-group">
+                                    {{ form.prix }}
+                                    <span class="input-group-text">DH</span>
+                                </div>
+                                {% if form.prix.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.prix.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quantite_initiale.id_for_label }}" class="form-label">
+                                    <i class="fas fa-boxes me-1"></i>{{ form.quantite_initiale.label }} *
+                                </label>
+                                {{ form.quantite_initiale }}
+                                {% if form.quantite_initiale.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.quantite_initiale.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.seuil_alerte.id_for_label }}" class="form-label">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>{{ form.seuil_alerte.label }} *
+                                </label>
+                                {{ form.seuil_alerte }}
+                                {% if form.seuil_alerte.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.seuil_alerte.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Alerte quand le stock descend en dessous de cette valeur</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>{{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'articles:article_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                            </a>
+                            <button type="submit" class="btn {% if form.instance.pk %}btn-warning{% else %}btn-primary{% endif %}">
+                                <i class="fas fa-save me-2"></i>
+                                {% if form.instance.pk %}Modifier l'article{% else %}Créer l'article{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Bootstrap form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}
+
+

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <div class="btn-group">
+            <a href="?export=pdf" class="btn btn-secondary">Exporter PDF</a>
+            <a href="?export=csv" class="btn btn-secondary">Exporter CSV</a>
+        </div>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <canvas id="stockChart"></canvas>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Catégorie</th>
+                    <th>Stock Total</th>
+                    <th>Nombre d'Articles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stock_by_category %}
+                <tr>
+                    <td>{{ stock.categorie__nom }}</td>>
+                    <td>{{ stock.total_stock }}</td>
+                    <td>{{ stock.article_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [{% for stock in stock_by_category %}"{{ stock.categorie__nom }}",{% endfor %}],,
+            datasets: [{
+                label: 'Stock Total',
+                data: [{% for stock in stock_by_category %}{{ stock.total_stock }},{% endfor %}],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgb(75, 192, 192)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
